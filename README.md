@@ -1,188 +1,331 @@
 # Xero MCP Server
 
-This is a Model Context Protocol (MCP) server implementation for Xero. It provides a bridge between the MCP protocol and Xero's API, allowing for standardized access to Xero's accounting and business features.
+A comprehensive Model Context Protocol (MCP) server implementation for Xero that provides standardized access to Xero's accounting and business features through HTTP endpoints.
 
-## Features
+## 🏗️ Architecture Overview
 
-- Xero OAuth2 authentication with custom connections
-- Contact management
-- Chart of Accounts management
-- Invoice creation and management
-- MCP protocol compliance
+The Xero MCP Server consists of two main components:
 
-## Prerequisites
+1. **MCP Core Server** (`dist/index.js`) - Handles MCP protocol communication
+2. **HTTP Wrapper** (`mcp-server.js`) - Provides REST API endpoints for client integration
+
+### Server Flow
+
+```
+Client Request → HTTP Server → MCP Server → Xero API → Response
+     ↓              ↓            ↓           ↓         ↓
+  REST API    Express.js    MCP Protocol  Xero SDK   JSON Response
+```
+
+## 🚀 Quick Start
+
+### Prerequisites
 
 - Node.js (v18 or higher)
 - npm or pnpm
-- A Xero developer account with API credentials
-
-## Docs and Links
-
-- [Xero Public API Documentation](https://developer.xero.com/documentation/api/)
-- [Xero API Explorer](https://api-explorer.xero.com/)
-- [Xero OpenAPI Specs](https://github.com/XeroAPI/Xero-OpenAPI)
-- [Xero-Node Public API SDK Docs](https://xeroapi.github.io/xero-node/accounting)
-- [Developer Documentation](https://developer.xero.com/)
-
-## Setup
-
-### Create a Xero Account
-
-If you don't already have a Xero account and organisation already, can create one by signing up [here](https://www.xero.com/au/signup/) using the free trial.
-
-We recommend using a Demo Company to start with because it comes with some pre-loaded sample data. Once you are logged in, switch to it by using the top left-hand dropdown and selecting "Demo Company". You can reset the data on a Demo Company, or change the country, at any time by using the top left-hand dropdown and navigating to [My Xero](https://my.xero.com).
-
-NOTE: To use Payroll-specific queries, the region should be either NZ or UK.
-
-### Authentication
-
-There are 2 modes of authentication supported in the Xero MCP server:
-
-#### 1. Custom Connections
-
-This is a better choice for testing and development which allows you to specify client id and secrets for a specific organisation.
-It is also the recommended approach if you are integrating this into 3rd party MCP clients such as Claude Desktop.
-
-##### Configuring your Xero Developer account
-
-Set up a Custom Connection following these instructions: https://developer.xero.com/documentation/guides/oauth2/custom-connections/
-
-Currently the following scopes are required for all sessions: [scopes](src/clients/xero-client.ts#L91-L92)
-
-##### Integrating the MCP server with Claude Desktop
-
-To add the MCP server to Claude go to Settings > Developer > Edit config and add the following to your claude_desktop_config.json file:
-
-```json
-{
-  "mcpServers": {
-    "xero": {
-      "command": "npx",
-      "args": ["-y", "@xeroapi/xero-mcp-server@latest"],
-      "env": {
-        "XERO_CLIENT_ID": "your_client_id_here",
-        "XERO_CLIENT_SECRET": "your_client_secret_here"
-      }
-    }
-  }
-}
-```
-
-NOTE: If you are using [Node Version Manager](https://github.com/nvm-sh/nvm) `"command": "npx"` section change it to be the full path to the executable, ie: `your_home_directory/.nvm/versions/node/v22.14.0/bin/npx` on Mac / Linux or `"your_home_directory\\.nvm\\versions\\node\\v22.14.0\\bin\\npx"` on Windows
-
-#### 2. Bearer Token
-
-This is a better choice if you are to support multiple Xero accounts at runtime and allow the MCP client to execute an auth flow (such as PKCE) as required.
-In this case, use the following configuration:
-
-```json
-{
-  "mcpServers": {
-    "xero": {
-      "command": "npx",
-      "args": ["-y", "@xeroapi/xero-mcp-server@latest"],
-      "env": {
-        "XERO_CLIENT_BEARER_TOKEN": "your_bearer_token"
-      }
-    }
-  }
-}
-```
-
-NOTE: The `XERO_CLIENT_BEARER_TOKEN` will take precedence over the `XERO_CLIENT_ID` if defined.
-
-### Available MCP Commands
-
-- `list-accounts`: Retrieve a list of accounts
-- `list-contacts`: Retrieve a list of contacts from Xero
-- `list-credit-notes`: Retrieve a list of credit notes
-- `list-invoices`: Retrieve a list of invoices
-- `list-items`: Retrieve a list of items
-- `list-organisation-details`: Retrieve details about an organisation
-- `list-profit-and-loss`: Retrieve a profit and loss report
-- `list-quotes`: Retrieve a list of quotes
-- `list-tax-rates`: Retrieve a list of tax rates
-- `list-payments`: Retrieve a list of payments
-- `list-trial-balance`: Retrieve a trial balance report
-- `list-profit-and-loss`: Retrieve a profit and loss report
-- `list-bank-transactions`: Retrieve a list of bank account transactions
-- `list-payroll-employees`: Retrieve a list of Payroll Employees
-- `list-report-balance-sheet`: Retrieve a balance sheet report
-- `list-payroll-employee-leave`: Retrieve a Payroll Employee's leave records
-- `list-payroll-employee-leave-balances`: Retrieve a Payroll Employee's leave balances
-- `list-payroll-employee-leave-types`: Retrieve a list of Payroll leave types
-- `list-payroll-leave-periods`: Retrieve a list of a Payroll Employee's leave periods
-- `list-payroll-leave-types`: Retrieve a list of all avaliable leave types in Xero Payroll
-- `list-aged-receivables-by-contact`: Retrieves aged receivables for a contact
-- `list-aged-payables-by-contact`: Retrieves aged payables for a contact
-- `list-contact-groups`: Retrieve a list of contact groups
-- `create-contact`: Create a new contact
-- `create-credit-note`: Create a new credit note
-- `create-invoice`: Create a new invoice
-- `create-payment`: Create a new payment
-- `create-quote`: Create a new quote
-- `create-credit-note`: Create a new credit note
-- `create-payroll-timesheet`: Create a new Payroll Timesheet
-- `update-contact`: Update an existing contact
-- `update-invoice`: Update an existing draft invoice
-- `update-quote`: Update an existing draft quote
-- `update-credit-note`: Update an existing draft credit note
-- `update-payroll-timesheet-line`: Update a line on an existing Payroll Timesheet
-- `approve-payroll-timesheet`: Approve a Payroll Timesheet
-- `revert-payroll-timesheet`: Revert an approved Payroll Timesheet
-- `add-payroll-timesheet-line`: Add new line on an existing Payroll Timesheet
-- `delete-payroll-timesheet`: Delete an existing Payroll Timesheet
-- `get-payroll-timesheet`: Retrieve an existing Payroll Timesheet
-
-For detailed API documentation, please refer to the [MCP Protocol Specification](https://modelcontextprotocol.io/).
-
-## For Developers
+- Xero developer account with API credentials
 
 ### Installation
 
 ```bash
-# Using npm
+# Install dependencies
 npm install
 
-# Using pnpm
-pnpm install
-```
-
-### Run a build
-
-```bash
-# Using npm
+# Build the project
 npm run build
 
-# Using pnpm
-pnpm build
+# Set environment variables
+export XERO_CLIENT_ID=your_xero_client_id
+export XERO_CLIENT_SECRET=your_xero_client_secret
+
+# Start the HTTP server
+node mcp-server.js
 ```
 
-### Integrating with Claude Desktop
+The server will start on `http://localhost:3000` by default.
 
-To link your Xero MCP server in development to Claude Desktop go to Settings > Developer > Edit config and add the following to your `claude_desktop_config.json` file:
+## 🔗 API Endpoints
 
-NOTE: For Windows ensure the `args` path escapes the `\` between folders ie. `"C:\\projects\xero-mcp-server\\dist\\index.js"`
+### Health Check
+```http
+GET /health
+```
+Returns server status and MCP server state.
 
-```json
+### List Available Tools
+```http
+GET /tools
+```
+Returns all available MCP tools with their schemas.
+
+### Call a Tool
+```http
+POST /tools/{toolName}
+Content-Type: application/json
+
 {
-  "mcpServers": {
-    "xero": {
-      "command": "node",
-      "args": ["insert-your-file-path-here/xero-mcp-server/dist/index.js"],
-      "env": {
-        "XERO_CLIENT_ID": "your_client_id_here",
-        "XERO_CLIENT_SECRET": "your_client_secret_here"
-      }
-    }
+  "arguments": {
+    // Tool-specific parameters
   }
 }
 ```
 
-## License
+### Generic MCP Endpoint
+```http
+POST /mcp
+Content-Type: application/json
 
-MIT
+{
+  "method": "tools/call",
+  "params": {
+    "name": "tool-name",
+    "arguments": {}
+  }
+}
+```
 
-## Security
+## 🛠️ Available Tools
 
-Please do not commit your `.env` file or any sensitive credentials to version control (it is included in `.gitignore` as a safe default.)
+### 📋 List Operations
+
+#### Core Business Data
+- **`list-contacts`** - Retrieve all contacts (customers/suppliers)
+  - Parameters: `page` (optional) - Page number for pagination
+- **`list-invoices`** - Retrieve all invoices
+  - Parameters: `page`, `status`, `dateFrom`, `dateTo` (all optional)
+- **`list-credit-notes`** - Retrieve all credit notes
+  - Parameters: `page`, `status`, `dateFrom`, `dateTo` (all optional)
+- **`list-payments`** - Retrieve all payments
+  - Parameters: `page`, `dateFrom`, `dateTo` (all optional)
+- **`list-quotes`** - Retrieve all quotes
+  - Parameters: `page`, `status`, `dateFrom`, `dateTo` (all optional)
+
+#### Financial Data
+- **`list-accounts`** - Retrieve chart of accounts
+  - Parameters: `page` (optional)
+- **`list-bank-transactions`** - Retrieve bank transactions
+  - Parameters: `page`, `dateFrom`, `dateTo` (all optional)
+- **`list-manual-journals`** - Retrieve manual journals
+  - Parameters: `page`, `dateFrom`, `dateTo` (all optional)
+- **`list-items`** - Retrieve inventory items
+  - Parameters: `page` (optional)
+
+#### Reports
+- **`list-profit-and-loss`** - Retrieve profit and loss report
+  - Parameters: `fromDate`, `toDate`, `periods`, `timeframe` (all optional)
+- **`list-report-balance-sheet`** - Retrieve balance sheet report
+  - Parameters: `date`, `periods`, `timeframe` (all optional)
+- **`list-trial-balance`** - Retrieve trial balance report
+  - Parameters: `date` (optional)
+- **`list-aged-receivables-by-contact`** - Retrieve aged receivables
+  - Parameters: `contactId`, `date` (both optional)
+- **`list-aged-payables-by-contact`** - Retrieve aged payables
+  - Parameters: `contactId`, `date` (both optional)
+
+#### Organization & Settings
+- **`list-organisation-details`** - Retrieve organization information
+- **`list-tax-rates`** - Retrieve tax rates
+  - Parameters: `page` (optional)
+- **`list-contact-groups`** - Retrieve contact groups
+  - Parameters: `page` (optional)
+- **`list-tracking-categories`** - Retrieve tracking categories
+  - Parameters: `page` (optional)
+
+#### Payroll (NZ/UK only)
+- **`list-payroll-employees`** - Retrieve payroll employees
+  - Parameters: `page` (optional)
+- **`list-payroll-timesheets`** - Retrieve payroll timesheets
+  - Parameters: `page`, `employeeId`, `dateFrom`, `dateTo` (all optional)
+- **`list-payroll-employee-leave`** - Retrieve employee leave records
+  - Parameters: `employeeId`, `page` (both optional)
+- **`list-payroll-employee-leave-balances`** - Retrieve leave balances
+  - Parameters: `employeeId` (optional)
+- **`list-payroll-employee-leave-types`** - Retrieve employee leave types
+  - Parameters: `employeeId` (optional)
+- **`list-payroll-leave-periods`** - Retrieve leave periods
+  - Parameters: `employeeId`, `page` (both optional)
+- **`list-payroll-leave-types`** - Retrieve all leave types
+  - Parameters: `page` (optional)
+
+### ➕ Create Operations
+
+#### Core Business Objects
+- **`create-contact`** - Create a new contact
+  - Parameters: `name`, `firstName`, `lastName`, `emailAddress`, `isCustomer`, `isSupplier` (all optional except `name`)
+- **`create-invoice`** - Create a new invoice
+  - Parameters: `contactId`, `lineItems[]`, `type` (ACCREC/ACCPAY), `reference`, `date` (all optional except `contactId` and `lineItems`)
+- **`create-credit-note`** - Create a new credit note
+  - Parameters: `contactId`, `lineItems[]`, `type`, `reference`, `date` (all optional except `contactId` and `lineItems`)
+- **`create-payment`** - Create a new payment
+  - Parameters: `invoiceId`, `amount`, `accountId`, `date`, `reference` (all optional except `invoiceId` and `amount`)
+- **`create-quote`** - Create a new quote
+  - Parameters: `contactId`, `lineItems[]`, `reference`, `date` (all optional except `contactId` and `lineItems`)
+
+#### Financial Objects
+- **`create-bank-transaction`** - Create a bank transaction
+  - Parameters: `contactId`, `lineItems[]`, `date`, `reference` (all optional except `lineItems`)
+- **`create-manual-journal`** - Create a manual journal
+  - Parameters: `narration`, `journalLines[]`, `date` (all optional except `narration` and `journalLines`)
+- **`create-item`** - Create an inventory item
+  - Parameters: `name`, `code`, `description`, `purchaseDetails`, `salesDetails` (all optional except `name`)
+
+#### Payroll
+- **`create-payroll-timesheet`** - Create a payroll timesheet
+  - Parameters: `employeeId`, `startDate`, `endDate`, `timesheetLines[]` (all required)
+
+#### Settings
+- **`create-tracking-category`** - Create a tracking category
+  - Parameters: `name`, `status` (all optional except `name`)
+- **`create-tracking-options`** - Create tracking options
+  - Parameters: `trackingCategoryId`, `options[]` (all required)
+
+### ✏️ Update Operations
+
+#### Core Business Objects
+- **`update-contact`** - Update an existing contact
+  - Parameters: `contactId`, `name`, `firstName`, `lastName`, `emailAddress` (all optional except `contactId`)
+- **`update-invoice`** - Update a draft invoice
+  - Parameters: `invoiceId`, `lineItems[]`, `reference`, `date` (all optional except `invoiceId`)
+- **`update-credit-note`** - Update a draft credit note
+  - Parameters: `creditNoteId`, `lineItems[]`, `reference`, `date` (all optional except `creditNoteId`)
+- **`update-quote`** - Update a draft quote
+  - Parameters: `quoteId`, `lineItems[]`, `reference`, `date` (all optional except `quoteId`)
+
+#### Financial Objects
+- **`update-bank-transaction`** - Update a bank transaction
+  - Parameters: `bankTransactionId`, `lineItems[]`, `date`, `reference` (all optional except `bankTransactionId`)
+- **`update-manual-journal`** - Update a manual journal
+  - Parameters: `manualJournalId`, `narration`, `journalLines[]`, `date` (all optional except `manualJournalId`)
+
+#### Payroll
+- **`update-payroll-timesheet-add-line`** - Add line to timesheet
+  - Parameters: `timesheetId`, `employeeId`, `date`, `earningsRateId`, `numberOfUnits` (all required)
+- **`update-payroll-timesheet-update-line`** - Update timesheet line
+  - Parameters: `timesheetId`, `timesheetLineId`, `numberOfUnits` (all required)
+- **`approve-payroll-timesheet`** - Approve a timesheet
+  - Parameters: `timesheetId` (required)
+- **`revert-payroll-timesheet`** - Revert an approved timesheet
+  - Parameters: `timesheetId` (required)
+
+#### Settings
+- **`update-tracking-category`** - Update tracking category
+  - Parameters: `trackingCategoryId`, `name`, `status` (all optional except `trackingCategoryId`)
+- **`update-tracking-options`** - Update tracking options
+  - Parameters: `trackingCategoryId`, `options[]` (all required)
+
+### 🗑️ Delete Operations
+
+#### Payroll
+- **`delete-payroll-timesheet`** - Delete a timesheet
+  - Parameters: `timesheetId` (required)
+
+### 📖 Get Operations
+
+#### Payroll
+- **`get-payroll-timesheet`** - Get a specific timesheet
+  - Parameters: `timesheetId` (required)
+
+## 🔐 Authentication
+
+The server supports two authentication modes:
+
+### 1. Custom Connections (Recommended for Development)
+Set environment variables:
+```bash
+export XERO_CLIENT_ID=your_client_id
+export XERO_CLIENT_SECRET=your_client_secret
+```
+
+### 2. Bearer Token (For Multiple Accounts)
+Set environment variable:
+```bash
+export XERO_CLIENT_BEARER_TOKEN=your_bearer_token
+```
+
+## 📝 Usage Examples
+
+### List all contacts
+```bash
+curl -X GET http://localhost:3000/tools
+```
+
+### Create an invoice
+```bash
+curl -X POST http://localhost:3000/tools/create-invoice \
+  -H "Content-Type: application/json" \
+  -d '{
+    "arguments": {
+      "contactId": "CONTACT_ID",
+      "lineItems": [
+        {
+          "description": "Consulting Services",
+          "quantity": 10,
+          "unitAmount": 100.00,
+          "accountCode": "200",
+          "taxType": "OUTPUT"
+        }
+      ],
+      "type": "ACCREC",
+      "reference": "INV-001"
+    }
+  }'
+```
+
+### Get profit and loss report
+```bash
+curl -X POST http://localhost:3000/tools/list-profit-and-loss \
+  -H "Content-Type: application/json" \
+  -d '{
+    "arguments": {
+      "fromDate": "2024-01-01",
+      "toDate": "2024-12-31",
+      "timeframe": "QUARTER"
+    }
+  }'
+```
+
+## 🏗️ Development
+
+### Project Structure
+```
+src/
+├── clients/          # Xero API client
+├── handlers/         # Business logic handlers
+├── helpers/          # Utility functions
+├── server/           # MCP server implementation
+├── tools/            # Tool definitions
+│   ├── create/       # Create operations
+│   ├── delete/       # Delete operations
+│   ├── get/          # Get operations
+│   ├── list/         # List operations
+│   └── update/       # Update operations
+└── types/            # TypeScript type definitions
+```
+
+### Building
+```bash
+npm run build
+```
+
+### Development Mode
+```bash
+npm run watch
+```
+
+## 📚 Documentation Links
+
+- [Xero Public API Documentation](https://developer.xero.com/documentation/api/)
+- [Xero API Explorer](https://api-explorer.xero.com/)
+- [Xero OpenAPI Specs](https://github.com/XeroAPI/Xero-OpenAPI)
+- [Xero-Node SDK Documentation](https://xeroapi.github.io/xero-node/accounting)
+- [MCP Protocol Specification](https://modelcontextprotocol.io/)
+
+## 🔒 Security
+
+- Never commit `.env` files or sensitive credentials
+- Use environment variables for all sensitive data
+- The server runs locally by default for security
+
+## 📄 License
+
+MIT License - see LICENSE file for details.
