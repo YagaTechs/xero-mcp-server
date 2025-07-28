@@ -3,7 +3,7 @@ console.log('[XERO MCP] Starting server...');
 
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { XeroMcpServer } from "./server/xero-mcp-server.js";
-import { ToolFactory } from "./tools/tool-factory.js";
+// import { ToolFactory } from "./tools/tool-factory.js";
 
 const main = async () => {
   try {
@@ -14,9 +14,9 @@ const main = async () => {
     const server = XeroMcpServer.GetServer();
     console.log('[XERO MCP] Server instance obtained.');
 
-    console.log('[XERO MCP] Initializing ToolFactory...');
-    ToolFactory(server);
-    console.log('[XERO MCP] ToolFactory initialized.');
+    // console.log('[XERO MCP] Initializing ToolFactory...');
+    // ToolFactory(server);
+    // console.log('[XERO MCP] ToolFactory initialized.');
 
     // Start receiving messages on stdin and sending messages on stdout
     console.log('[XERO MCP] Creating StdioServerTransport...');
