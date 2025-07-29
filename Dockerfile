@@ -21,6 +21,10 @@ RUN npm run build
 # Production stage
 FROM node:${NODE_VERSION} AS production
 
+# Accept secrets as build arguments
+ARG XERO_CLIENT_ID
+ARG XERO_CLIENT_SECRET
+
 WORKDIR /app
 
 # Copy package files
@@ -36,8 +40,11 @@ COPY mcp-server.js ./
 # Copy the compiled TypeScript application from builder
 COPY --from=builder /app/dist ./dist
 
-# Copy any other necessary files that might be required
-COPY .env* ./
+# Set environment variables from build args
+ENV XERO_CLIENT_ID=$XERO_CLIENT_ID
+ENV XERO_CLIENT_SECRET=$XERO_CLIENT_SECRET
+ENV NODE_ENV=production
+ENV PORT=3000
 
 # Create non-root user for security
 RUN addgroup -g 1001 -S nodejs && \
