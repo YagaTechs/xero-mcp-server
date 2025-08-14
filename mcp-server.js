@@ -153,7 +153,7 @@ async function initSupabaseServer() {
 
         const defaultBin = process.platform === 'win32' ? 'npm.cmd' : 'npm';
         const bin = process.env.SUPABASE_MCP_BIN || defaultBin;
-        const defaultArgs = ['exec', '--', '@supabase/mcp-server-supabase'];
+        const defaultArgs = ['exec', '--', '@supabase/mcp-server-supabase', '--read-only'];
         const rawArgs = process.env.SUPABASE_MCP_ARGS || '';
         let args = rawArgs
             ? (rawArgs.match(/\S+/g) || [])
