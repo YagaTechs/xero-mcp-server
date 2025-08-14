@@ -19,7 +19,8 @@
     "prepare": "npm run build",
     "watch": "tsc --watch",
     "lint:fix": "eslint --fix",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "supabase:mcp": "npx @supabase/mcp-server-supabase"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.6.0",
@@ -39,6 +40,7 @@
     "prettier": "3.5.3",
     "shx": "^0.3.4",
     "typescript": "^5.8.2",
-    "typescript-eslint": "^8.26.1"
+    "typescript-eslint": "^8.26.1",
+    "@supabase/mcp-server-supabase": "*"
   }
 }
