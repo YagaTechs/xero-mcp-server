@@ -152,6 +152,10 @@ async function initSupabaseServer() {
         console.log('🚀 Starting Supabase MCP server...');
 
         const bin = process.env.SUPABASE_MCP_BIN;
+<<<<<<< Updated upstream
+=======
+        const defaultArgs = ['exec', '--', '@supabase/mcp-server-supabase', '--read-only'];
+>>>>>>> Stashed changes
         const rawArgs = process.env.SUPABASE_MCP_ARGS || '';
         let args = rawArgs
             ? (rawArgs.match(/\S+/g) || [])
